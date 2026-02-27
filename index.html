@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stealth Chat AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1 class="logo">STEALTH</h1>
+            <div class="settings-group">
+                <label>OPENROUTER API KEY</label>
+                <input type="password" id="api-key" placeholder="sk-or-v1-...">
+                <button onclick="saveSettings()" class="save-btn">SAVE KEY</button>
+            </div>
+            <div class="info">
+                <p>Status: <span id="status">Ready</span></p>
+            </div>
+        </aside>
+
+        <main class="chat-section">
+            <div id="chat-window" class="chat-window">
+                <div class="msg system">Welcome back. System online.</div>
+            </div>
+            
+            <div class="input-area">
+                <textarea id="user-input" placeholder="Type a message..." rows="1"></textarea>
+                <button id="send-btn" onclick="sendMessage()">SEND</button>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
