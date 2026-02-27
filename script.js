@@ -1,68 +1,75 @@
-let apiKey = localStorage.getItem('stealth_api_key') || "";
-if (apiKey) document.getElementById('api-key').value = apiKey;
+// Load pre-existing settings
+let settings = JSON.parse(localStorage.getItem('stealth_settings')) || {
+    apiKey: "",
+    model: "openrouter/free",
+    theme: "Stealth Purple"
+};
 
-async function sendMessage() {
-    const inputField = document.getElementById('user-input');
-    const chatWindow = document.getElementById('chat-window');
-    const status = document.getElementById('status');
-    const message = inputField.value.trim();
+let history = JSON.parse(localStorage.getItem('stealth_history')) || [];
 
-    if (!message || !apiKey) {
-        alert("Please enter a message and ensure your API Key is saved.");
-        return;
-    }
+// Apply settings on load
+window.onload = () => {
+    document.getElementById('api-key').value = settings.apiKey;
+    document.getElementById('model-select').value = settings.model;
+    document.getElementById('theme-select').value = settings.theme;
+    changeTheme(settings.theme);
+    renderHistory();
+};
 
-    // Add User Message to UI
-    appendMessage('user', message);
-    inputField.value = "";
-    status.innerText = "Processing...";
-
-    try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
-                "HTTP-Referer": window.location.origin, // Required for OpenRouter
-                "X-Title": "Stealth Chat Web"
-            },
-            body: JSON.stringify({
-                model: "openrouter/free", // Or use any model from your ai_handler.py
-                messages: [{ role: "user", content: message }]
-            })
-        });
-
-        const data = await response.json();
-        const aiResponse = data.choices[0].message.content;
-        
-        appendMessage('ai', aiResponse);
-    } catch (error) {
-        appendMessage('system', "Error connecting to AI. Check console.");
-        console.error(error);
-    } finally {
-        status.innerText = "Ready";
-    }
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+    document.getElementById(`btn-${tabId}`).classList.add('active');
 }
 
-function appendMessage(sender, text) {
-    const chatWindow = document.getElementById('chat-window');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `msg ${sender}`;
-    msgDiv.innerText = text;
-    chatWindow.appendChild(msgDiv);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
+function changeTheme(themeName) {
+    // Replace space with hyphen for CSS class names (Stealth Purple -> Stealth-Purple)
+    const className = themeName.replace(" ", "-");
+    document.body.className = className;
 }
 
 function saveSettings() {
-    apiKey = document.getElementById('api-key').value;
-    localStorage.setItem('stealth_api_key', apiKey);
-    alert("API Key Saved Locally.");
+    settings.apiKey = document.getElementById('api-key').value;
+    settings.model = document.getElementById('model-select').value;
+    settings.theme = document.getElementById('theme-select').value;
+    
+    localStorage.setItem('stealth_settings', JSON.stringify(settings));
+    alert("SYSTEM UPDATED");
 }
 
-// Allow "Enter" to send (but Shift+Enter for new line)
-document.getElementById('user-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
+function clearHistory() {
+    if(confirm("Wipe all session data?")) {
+        history = [];
+        localStorage.removeItem('stealth_history');
+        renderHistory();
     }
-});
+}
+
+// Update the existing sendMessage to include the model from settings
+async function sendMessage() {
+    const input = document.getElementById('user-input');
+    const msg = input.value.trim();
+    if (!msg || !settings.apiKey) return;
+
+    // ... (Your existing UI update code) ...
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${settings.apiKey}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: settings.model, // Uses the model from settings tab
+            messages: [{ role: "user", content: msg }]
+        })
+    });
+    
+    // Save to history array
+    const data = await response.json();
+    const aiMsg = data.choices[0].message.content;
+    history.push({ time: new Date().toLocaleTimeString(), text: msg, response: aiMsg });
+    localStorage.setItem('stealth_history', JSON.stringify(history));
+}
