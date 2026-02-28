@@ -187,12 +187,19 @@
         let text = input.value.trim();
         if (!text && !attachedFileData) return;
 
+    // 1. Create the history-aware message list
+    // We take the last 6 messages from history so the AI has context
+        let contextHistory = activeHistory.slice(0, 6).reverse().map(msg => [
+            { role: "user", content: msg.user },
+            { role: "assistant", content: msg.ai }
+        ]).flat();
+
         appendMsg('user', text || `Uploaded ${attachedFileData?.name}`);
         const fileToSend = attachedFileData;
-        let finalPrompt = text;
-        
+        let currentPrompt = text;
+    
         if (fileToSend && !fileToSend.type.startsWith('image/')) {
-            finalPrompt = `Context File: ${fileToSend.name}\nContent:\n${fileToSend.content}\n\nUser Question: ${text}`;
+            currentPrompt = `Context File: ${fileToSend.name}\nContent:\n${fileToSend.content}\n\nUser Question: ${text}`;
         }
 
         input.value = '';
@@ -200,38 +207,44 @@
         document.getElementById('loading').style.display = 'block';
 
         try {
-            const bodyPayload = { model: activeConfig.model, messages: [] };
+        // 2. Build the payload with memory
+            const bodyPayload = { 
+                model: activeConfig.model, 
+                messages: [
+                    ...contextHistory, // This inserts the old conversation
+                    { role: "user", content: currentPrompt } // This is the new question
+                ] 
+            };
+
+        // Vision logic (Image support)
             if (fileToSend && fileToSend.type.startsWith('image/')) {
-                bodyPayload.messages.push({
-                    role: "user",
-                    content: [
-                        { type: "text", text: text || "Describe this image." },
-                        { type: "image_url", image_url: { url: fileToSend.content } }
-                    ]
-                });
-            } else {
-                bodyPayload.messages.push({ role: "user", content: finalPrompt });
+            // Note: Images usually take up a lot of "context," so we send them fresh
+                bodyPayload.messages[bodyPayload.messages.length - 1].content = [
+                    { type: "text", text: text || "Describe this image." },
+                    { type: "image_url", image_url: { url: fileToSend.content } }
+                ];
             }
 
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
+            method: "POST",
                 headers: { 
                     "Authorization": `Bearer ${activeConfig.apiKey.trim()}`, 
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:3000"
+                    "HTTP-Referer": window.location.origin
                 },
                 body: JSON.stringify(bodyPayload)
             });
 
             const data = await response.json();
-            if (data.error) appendMsg('ai', `❌ **API Error:** ${data.error.message}`);
+            if (data.error) appendMsg('ai', `❌ **Memory Error:** ${data.error.message}`);
             else {
                 const reply = data.choices[0].message.content;
                 appendMsg('ai', reply);
+                // Save to history so it's remembered next time
                 activeHistory.unshift({ user: text || "File Input", ai: reply, time: new Date().toLocaleTimeString() });
                 saveToStorage();
             }
-        } catch (e) { appendMsg('ai', "❌ **Connection Failed.** Check network."); } finally { document.getElementById('loading').style.display = 'none'; }
+        } catch (e) { appendMsg('ai', "❌ **Connection Lost.**"); } finally { document.getElementById('loading').style.display = 'none'; }
     }
 
     function appendMsg(sender, text) {
