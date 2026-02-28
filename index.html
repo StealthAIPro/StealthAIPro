@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Stealth Pro | v6.1</title>
+    <title>Stealth Pro | v6.2</title>
     <style>
         :root { --accent: #A020F0; --bg: #0B0B0B; --card: #121212; --text: #D1D1D1; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -43,15 +43,16 @@
         .ai { align-self: flex-start; background: var(--card); border: 1px solid #333; border-bottom-left-radius: 2px; width: 100%; }
 
         .input-wrapper { background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid #333; display: flex; flex-direction: column; flex-shrink: 0; margin-bottom: 10px; }
-        .input-row { display: flex; gap: 8px; align-items: flex-end; } /* Changed to flex-end for auto-resize look */
-        
-        textarea { 
-            flex: 1; background: transparent; border: none; color: white; 
-            outline: none; font-size: 16px; resize: none; padding: 8px 0; 
-            font-family: inherit; max-height: 200px; /* Prevents input from taking over screen */
-        }
+        .input-row { display: flex; gap: 8px; align-items: flex-end; }
+        textarea { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; resize: none; padding: 8px 0; font-family: inherit; max-height: 150px; }
 
         .send-btn { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .sub-btn { background: transparent; color: #888; border: 1px solid #333; padding: 8px; border-radius: 6px; cursor: pointer; margin-top: 10px; font-size: 11px; width: 100%; }
+        .danger-btn { background: #222; color: #ff5555; border: 1px solid #441111; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: 20px; width: 100%; }
+        
+        .setting-group { margin-bottom: 15px; text-align: left; }
+        .setting-group label { display: block; font-size: 11px; color: var(--accent); margin-bottom: 5px; font-weight: bold; }
+        .setting-group input { width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -86,7 +87,22 @@
         </div>
     </section>
 
-    </main>
+    <section id="tab-history" class="tab-content hidden">
+        <h3 style="margin:0 0 15px 0">LOGS</h3>
+        <div id="history-list" style="overflow-y:auto; flex:1;"></div>
+    </section>
+
+    <section id="tab-settings" class="tab-content hidden">
+        <h3>@<span id="display-user">Guest</span></h3>
+        <div class="setting-group">
+            <label>MODEL ID</label>
+            <input type="text" id="model-input">
+        </div>
+        <button class="send-btn" style="width:100%;" onclick="saveSettings()">SAVE CONFIG</button>
+        
+        <button class="danger-btn" onclick="logout()">LOGOUT</button>
+    </section>
+</main>
 
 <script>
     const DEFAULT_MODEL = "openrouter/auto"; 
@@ -94,21 +110,21 @@
     let activeConfig = null;
     let activeHistory = [];
 
-    // --- Core Logic ---
-
     function handleLogin(savedUser = null) {
         const user = savedUser || document.getElementById('username-input').value.trim().toLowerCase();
         if (!user) return;
         currentUser = user;
         localStorage.setItem('stealth_last_user', user);
         document.getElementById('auth-overlay').style.display = 'none';
-        
+        document.getElementById('display-user').innerText = user;
+
         const storageKey = `stealth_v_secure_${user}`;
         const raw = localStorage.getItem(storageKey);
         let data = raw ? JSON.parse(raw) : { config: { model: DEFAULT_MODEL }, history: [] };
         
         activeConfig = data.config;
         activeHistory = data.history;
+        document.getElementById('model-input').value = activeConfig.model;
     }
 
     async function handleSend() {
@@ -118,14 +134,13 @@
 
         appendMsg('user', text);
         
-        // Context memory
         let contextHistory = activeHistory.slice(0, 6).reverse().map(msg => [
             { role: "user", content: msg.user },
             { role: "assistant", content: msg.ai }
         ]).flat();
 
         input.value = '';
-        input.style.height = 'auto'; // Reset height after send
+        input.style.height = 'auto';
         document.getElementById('loading').style.display = 'block';
 
         try {
@@ -143,7 +158,7 @@
             appendMsg('ai', reply);
             
             activeHistory.unshift({ user: text, ai: reply, time: new Date().toLocaleTimeString() });
-            localStorage.setItem(`stealth_v_secure_${currentUser}`, JSON.stringify({ config: activeConfig, history: activeHistory }));
+            saveToStorage();
         } catch (e) {
             appendMsg('ai', "❌ Failed to reach Vercel API.");
         } finally {
@@ -151,31 +166,17 @@
         }
     }
 
-    // --- UI UX Enhancements ---
-
-    const inputField = document.getElementById('user-input');
-
-    // 1. Enter to Send / Shift+Enter for New Line
-    inputField.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
-    });
-
-    // 2. Auto-resize Input Height
-    inputField.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    });
-
     function appendMsg(sender, text) {
         const win = document.getElementById('chat-window');
         const d = document.createElement('div');
         d.className = `message ${sender}`;
-        d.innerHTML = text.replace(/\n/g, '<br>');
+        d.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
         win.appendChild(d);
         win.scrollTop = win.scrollHeight;
+    }
+
+    function saveToStorage() {
+        localStorage.setItem(`stealth_v_secure_${currentUser}`, JSON.stringify({ config: activeConfig, history: activeHistory }));
     }
 
     function showTab(name) {
@@ -185,7 +186,46 @@
         });
         document.getElementById(`tab-${name}`).classList.remove('hidden');
         document.getElementById(`nav-${name}`).classList.add('active');
+        if(name === 'history') renderHistory();
     }
+
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        list.innerHTML = activeHistory.length === 0 ? '<p style="text-align:center; opacity:0.4;">Empty.</p>' : '';
+        activeHistory.forEach(item => {
+            const div = document.createElement('div');
+            div.style.cssText = "background:var(--card); padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #222; font-size:13px; cursor:pointer;";
+            div.innerHTML = `<b>${item.time}:</b> ${item.user.substring(0,30)}...`;
+            div.onclick = () => {
+                document.getElementById('chat-window').innerHTML = '';
+                appendMsg('user', item.user);
+                appendMsg('ai', item.ai);
+                showTab('home');
+            };
+            list.appendChild(div);
+        });
+    }
+
+    function saveSettings() {
+        activeConfig.model = document.getElementById('model-input').value.trim();
+        saveToStorage();
+        alert("Config Saved.");
+    }
+
+    function logout() { localStorage.removeItem('stealth_last_user'); location.reload(); }
+
+    // Input Listeners
+    const inputField = document.getElementById('user-input');
+    inputField.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    });
+    inputField.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
 
     if (currentUser) handleLogin(currentUser);
 </script>
