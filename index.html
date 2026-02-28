@@ -132,8 +132,26 @@
 
 <script>
     // Updated Key with your new value
+    // This is the Base64 version of the key you provided
     const _v = "c2stLW9yLXYxLTllMjQ4MTk5Y2VjNjBiZDk1Mjg2OWNmNzU2Y2M2M2FhNWNiZjhjMzFlODRkMGQxY2QyODk3ZWNjZGQxYjRmMWQ=";
-    const getSecret = () => atob(_v).replace(/-/g, '');
+
+    const getSecret = () => {
+        try {
+            return atob(_v).trim();
+        } catch (e) {
+            console.error("Key decoding failed");
+            return "";
+        }
+    };
+
+// ... inside your handleLogin function ...
+    const data = JSON.parse(localStorage.getItem(`stealth_data_${user}`)) || {
+        config: { 
+            apiKey: getSecret(), // This ensures the new key is used for new users
+            model: 'openrouter/free' 
+        },
+        history: []
+    };
 
     let currentUser = localStorage.getItem('stealth_last_user') || null;
     let activeConfig = null;
