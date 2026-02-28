@@ -27,7 +27,7 @@
         
         /* Status Indicator */
         .status-box { display: flex; align-items: center; gap: 8px; font-size: 11px; margin-left: auto; padding-right: 10px; }
-        #status-dot { width: 8px; height: 8px; background: #ff4444; border-radius: 50%; box-shadow: 0 0 5px #ff4444; }
+        #status-dot { width: 8px; height: 8px; background: #ff4444; border-radius: 50%; transition: 0.3s; }
 
         /* Iframe Container */
         .view-container { flex: 1; position: relative; background: white; }
@@ -49,9 +49,9 @@
         </div>
         <div class="nav-bar">
             <button onclick="reloadCurrent()" style="background:none; border:none; color:white; cursor:pointer; font-size:18px;">🔄</button>
-            <input type="text" id="url-input" placeholder="Search Google or type a URL...">
+            <input type="text" id="url-input" placeholder="Search or type a URL...">
         </div>
-        <div class="view-container" id="view-container"></div>
+        <div id="view-container" class="view-container"></div>
     </div>
 
     <script src="/uv/uv.bundle.js"></script>
@@ -63,50 +63,37 @@
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
 
-        // 2. The Smart Registration Logic
         async function initProxy() {
             if ('serviceWorker' in navigator) {
                 try {
-                    const registration = await navigator.serviceWorker.register('/uv.sw.js', { 
+                    // Register the root service worker
+                    const reg = await navigator.serviceWorker.register('/uv.sw.js', { 
                         scope: __uv$config.prefix 
                     });
 
-                    // If we're already being controlled, go green!
+                    // Check if already controlled
                     if (navigator.serviceWorker.controller) {
                         setProxyReady();
                     } else {
                         statusText.innerText = 'Syncing...';
                         
-                        // Time-based lock to prevent infinite reloading
-                        const lastReload = localStorage.getItem('uv_last_reload');
-                        const now = Date.now();
+                        // Listen for the controller change (activation)
+                        navigator.serviceWorker.addEventListener('controllerchange', () => {
+                            setProxyReady();
+                        });
 
-                        // Only reload if we haven't done so in the last 3 seconds
-                        if (!lastReload || (now - lastReload > 3000)) {
-                            localStorage.setItem('uv_last_reload', now);
-                            
-                            // If worker is active, refresh to let it take control
-                            if (registration.active) {
-                                window.location.reload();
-                            } else {
-                                // If it's still installing, wait for it to finish then refresh
-                                registration.onupdatefound = () => {
-                                    const sw = registration.installing;
-                                    sw.onstatechange = () => {
-                                        if (sw.state === 'activated') window.location.reload();
-                                    }
-                                }
-                            }
-                        } else {
-                            // If we reloaded too recently, just wait for the 'controllerchange' event
-                            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                                setProxyReady();
-                            });
+                        // One-time safety reload if it's been syncing too long
+                        const lastSync = sessionStorage.getItem('uv_sync_attempt');
+                        if (!lastSync) {
+                            sessionStorage.setItem('uv_sync_attempt', 'true');
+                            setTimeout(() => {
+                                if (!navigator.serviceWorker.controller) window.location.reload();
+                            }, 2000);
                         }
                     }
                 } catch (err) {
                     statusText.innerText = 'Proxy Error';
-                    console.error("SW Register Error:", err);
+                    console.error(err);
                 }
             }
         }
@@ -140,7 +127,6 @@
             
             const activeTab = document.getElementById(`tab-${id}`);
             const activeFrame = document.getElementById(id);
-            
             if (activeTab && activeFrame) {
                 activeTab.classList.add('active');
                 activeFrame.classList.add('active');
@@ -150,8 +136,10 @@
 
         function closeTab(e, id) {
             e.stopPropagation();
-            document.getElementById(`tab-${id}`).remove();
-            document.getElementById(id).remove();
+            const tab = document.getElementById(`tab-${id}`);
+            const frame = document.getElementById(id);
+            if(tab) tab.remove();
+            if(frame) frame.remove();
             const tabs = document.querySelectorAll('.tab');
             if (tabs.length > 0) switchTab(tabs[tabs.length-1].id.replace('tab-', ''));
         }
@@ -175,7 +163,7 @@
                 const frame = document.querySelector('iframe.active');
                 if (frame) {
                     frame.dataset.url = url;
-                    // Apply encoded URL
+                    // Use the Ultraviolet prefix + encoded URL
                     frame.src = __uv$config.prefix + __uv$config.encodeUrl(url);
                     
                     const tabSpan = document.querySelector(`#tab-${frame.id} span`);
