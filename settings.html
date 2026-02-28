@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Stealth OS</title>
+    <style>
+        :root { --bg: #050505; --panel: #111; --accent: #A020F0; --text: #eee; --subtext: #888; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .settings-card { width: 100%; max-width: 600px; background: var(--panel); border: 1px solid #222; border-radius: 16px; padding: 30px; }
+        h1 { font-size: 1.8rem; margin-top: 0; color: var(--accent); }
+        .section { margin-bottom: 30px; border-bottom: 1px solid #222; padding-bottom: 20px; }
+        .section:last-child { border: none; }
+        h3 { font-size: 1rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; color: var(--subtext); }
+        
+        .setting-item { margin-bottom: 20px; }
+        label { display: block; font-size: 0.9rem; margin-bottom: 8px; font-weight: 500; }
+        input, select { 
+            width: 100%; padding: 12px; background: #000; border: 1px solid #333; 
+            color: white; border-radius: 8px; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); }
+        
+        .btn-save { 
+            background: var(--accent); color: white; border: none; padding: 12px 24px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem;
+        }
+        .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+        .back-link { display: inline-block; margin-bottom: 20px; color: var(--subtext); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="settings-card">
+    <a href="index.html" class="back-link">← Return to Dashboard</a>
+    <h1>System Settings</h1>
+
+    <div class="section">
+        <h3>Neural Engine</h3>
+        <div class="setting-item">
+            <label>OpenRouter Model ID</label>
+            <input type="text" id="model-id" placeholder="e.g., openrouter/free">
+            <p style="font-size: 0.75rem; color: #555; margin-top: 5px;">Default: openrouter/free (Auto-routes to best available free model)</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Tab Cloaking (Stealth)</h3>
+        <div class="setting-item">
+            <label>Mask Tab As:</label>
+            <select id="tab-mask" onchange="previewMask()">
+                <option value="default">Stealth OS (None)</option>
+                <option value="google">Google Drive</option>
+                <option value="classroom">Google Classroom</option>
+                <option value="canvas">Canvas</option>
+                <option value="wikipedia">Wikipedia</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <label>Panic Key (Instant Redirect)</label>
+            <input type="text" id="panic-key" placeholder="e.g., Escape">
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Local Data</h3>
+        <button class="btn-save" style="background: #222; margin-bottom: 10px;" onclick="clearHistory()">Clear Chat History</button>
+        <button class="btn-save" style="background: #a11;" onclick="factoryReset()">Factory Reset All</button>
+    </div>
+
+    <button class="btn-save" onclick="saveSettings()">Apply & Save Configuration</button>
+</div>
+
+<script>
+    // Load existing settings on page load
+    window.onload = () => {
+        document.getElementById('model-id').value = localStorage.getItem('stealth_model') || 'openrouter/free';
+        document.getElementById('tab-mask').value = localStorage.getItem('stealth_mask') || 'default';
+        document.getElementById('panic-key').value = localStorage.getItem('stealth_panic') || 'Escape';
+    };
+
+    function saveSettings() {
+        const model = document.getElementById('model-id').value;
+        const mask = document.getElementById('tab-mask').value;
+        const panic = document.getElementById('panic-key').value;
+
+        localStorage.setItem('stealth_model', model);
+        localStorage.setItem('stealth_mask', mask);
+        localStorage.setItem('stealth_panic', panic);
+
+        applyTabMask(mask);
+        alert("Settings synced to local storage.");
+    }
+
+    function applyTabMask(choice) {
+        const masks = {
+            'google': { title: 'My Drive - Google Drive', icon: 'https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png' },
+            'classroom': { title: 'Classes', icon: 'https://www.gstatic.com/classroom/favicon.png' },
+            'canvas': { title: 'Dashboard', icon: 'https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico' },
+            'wikipedia': { title: 'Wikipedia, the free encyclopedia', icon: 'https://en.wikipedia.org/static/favicon/wikipedia.ico' },
+            'default': { title: 'Stealth OS', icon: '' }
+        };
+
+        const selected = masks[choice];
+        document.title = selected.title;
+        
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = selected.icon;
+    }
+
+    function clearHistory() {
+        if(confirm("Delete all locally stored chat logs?")) {
+            localStorage.removeItem('stealth_history');
+            alert("History wiped.");
+        }
+    }
+
+    function factoryReset() {
+        if(confirm("This will wipe ALL settings and history. Proceed?")) {
+            localStorage.clear();
+            window.location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
