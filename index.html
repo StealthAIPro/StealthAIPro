@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Stealth Pro | v7.5</title>
+    <title>Stealth Pro | v7.8</title>
     <style>
         :root { --accent: #A020F0; --bg: #0B0B0B; --card: #121212; --text: #D1D1D1; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
         
-        header { background: var(--card); padding: 10px 20px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        .logo { color: var(--accent); font-weight: bold; }
-        nav button { background: transparent; border: none; color: #555; font-size: 1.2rem; cursor: pointer; padding: 5px 10px; }
-        nav button.active { color: var(--accent); }
+        header { background: var(--card); padding: 12px 20px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .logo { color: var(--accent); font-weight: bold; letter-spacing: 1px; }
+        nav button { background: transparent; border: none; color: #555; font-size: 1.3rem; cursor: pointer; padding: 5px 10px; transition: 0.2s; }
+        nav button.active { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
 
         main { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow: hidden; }
         .tab-content { display: flex; flex-direction: column; height: 100%; }
         .hidden { display: none !important; }
 
-        #chat-window { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 10px; }
-        .message { max-width: 85%; padding: 12px; border-radius: 12px; font-size: 15px; word-wrap: break-word; }
-        .user { align-self: flex-end; background: var(--accent); color: white; }
-        .ai { align-self: flex-start; background: var(--card); border: 1px solid #333; }
+        #chat-window { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 15px; scroll-behavior: smooth; }
+        .message { max-width: 85%; padding: 12px 16px; border-radius: 15px; font-size: 15px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
+        .user { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 2px; }
+        .ai { align-self: flex-start; background: var(--card); border: 1px solid #333; border-bottom-left-radius: 2px; }
         
-        .input-area { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid #333; display: flex; gap: 8px; align-items: flex-end; }
-        textarea { flex: 1; background: transparent; border: none; color: white; outline: none; resize: none; font-family: inherit; font-size: 16px; padding: 5px 0; max-height: 150px; }
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-draw { background: #222; font-size: 1.1rem; }
+        .input-area { background: var(--card); padding: 12px; border-radius: 15px; border: 1px solid #333; display: flex; gap: 10px; align-items: flex-end; }
+        textarea { flex: 1; background: transparent; border: none; color: white; outline: none; resize: none; font-family: inherit; font-size: 16px; padding: 6px 0; max-height: 150px; }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-draw { background: #222; font-size: 1.2rem; padding: 8px 12px; }
         
-        img.gen-image { width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid #444; }
+        img.gen-image { width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid #444; }
+        #loading { font-size: 10px; color: var(--accent); margin-bottom: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -45,34 +46,36 @@
 <main>
     <section id="tab-home" class="tab-content">
         <div id="chat-window"></div>
-        <div id="loading" style="display:none; color:var(--accent); font-size:10px; margin-bottom:5px;">AI IS THINKING...</div>
+        <div id="loading">AI STREAM ACTIVE...</div>
         <div class="input-area">
-            <button class="btn btn-draw" onclick="generateImage()">🎨</button>
+            <button class="btn btn-draw" onclick="generateImage()" title="Generate Image">🎨</button>
             <textarea id="user-input" rows="1" placeholder="Ask or type to draw..."></textarea>
             <button class="btn" onclick="handleSend()">SEND</button>
         </div>
     </section>
 
     <section id="tab-history" class="tab-content hidden">
-        <h3>History</h3>
-        <div id="history-list" style="overflow-y:auto;"></div>
+        <h3 style="margin-top:0">Chat Logs</h3>
+        <div id="history-list" style="overflow-y:auto; flex:1;"></div>
     </section>
 
     <section id="tab-settings" class="tab-content hidden">
-        <h3>Settings</h3>
-        <label style="font-size:12px; color:var(--accent)">MODEL ID</label>
-        <input type="text" id="model-input" style="width:100%; padding:10px; background:#000; border:1px solid #333; color:#fff; border-radius:8px; margin-top:5px;">
-        <button class="btn" style="width:100%; margin-top:15px;" onclick="saveSettings()">SAVE CONFIG</button>
+        <h3 style="margin-top:0">Configuration</h3>
+        <label style="font-size:12px; color:var(--accent); font-weight:bold;">MODEL PATH</label>
+        <input type="text" id="model-input" style="width:100%; padding:12px; background:#000; border:1px solid #333; color:#fff; border-radius:10px; margin:8px 0 20px;">
+        <button class="btn" style="width:100%" onclick="saveSettings()">SAVE SETTINGS</button>
+        <button class="btn" style="width:100%; background:#222; margin-top:10px;" onclick="clearHistory()">CLEAR HISTORY</button>
     </section>
 </main>
 
 <script>
-    let activeHistory = JSON.parse(localStorage.getItem('stealth_history') || '[]');
-    let currentModel = localStorage.getItem('stealth_model') || 'google/gemini-2.0-flash-exp:free';
+    let history = JSON.parse(localStorage.getItem('stealth_history') || '[]');
+    let currentModel = localStorage.getItem('stealth_model') || 'openrouter/free';
     document.getElementById('model-input').value = currentModel;
 
-    // 1. FIXED: Enter to Send
     const inputField = document.getElementById('user-input');
+
+    // 1. Enter to Send Logic
     inputField.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -80,35 +83,33 @@
         }
     });
 
-    // 2. FIXED: Tab Switching
+    // 2. Tab Switching Logic
     function showTab(name) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(`tab-${name}`).classList.remove('hidden');
         document.getElementById(`nav-${name}`).classList.add('active');
-        if(name === 'history') renderHistory();
+        if (name === 'history') renderHistory();
     }
 
-    // ... (keep the same CSS and HTML structure from previous version)
-
+    // 3. The Core Chat Function (Fixes Blank Response)
     async function handleSend() {
         const text = inputField.value.trim();
         if (!text) return;
 
         appendMsg('user', text);
         inputField.value = '';
+        inputField.style.height = 'auto';
+        
         const aiBubble = appendEmptyMsg('ai');
-        document.getElementById('loading').style.display = 'block';
+        const loader = document.getElementById('loading');
+        loader.style.display = 'block';
 
         try {
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // Sending 'openrouter/free' to the backend
-                body: JSON.stringify({ 
-                    model: 'openrouter/free', 
-                    messages: [{ role: "user", content: text }] 
-                })
+                body: JSON.stringify({ model: currentModel, messages: [{ role: "user", content: text }] })
             });
 
             const reader = response.body.getReader();
@@ -118,74 +119,59 @@
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-            
+
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');
-            
+                
                 for (const line of lines) {
-                // This is the Vercel AI SDK text prefix
+                    // Vercel AI SDK prefix: 0: is text content
                     if (line.startsWith('0:')) {
-                        try {
-                            let content = line.slice(2);
-                            // Clean up quotes if the SDK wrapped the chunk in them
-                            if (content.startsWith('"') && content.endsWith('"')) {
-                                content = content.slice(1, -1);
-                            }
-                            // Handle escaped characters from the stream
-                            fullText += content
-                                .replace(/\\n/g, '\n')
-                                .replace(/\\"/g, '"')
-                                .replace(/\\\\/g, '\\');
-                        } catch (e) {
-                            console.error("Parsing error", e);
+                        let content = line.slice(2).trim();
+                        // Strip quotes that the SDK wraps around chunks
+                        if (content.startsWith('"') && content.endsWith('"')) {
+                            content = content.slice(1, -1);
                         }
+                        // Unescape characters like \n
+                        fullText += content.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
                     }
                 }
-            // Use innerText to preserve the AI's formatting (newlines, etc)
-                aiBubble.innerText = fullText;
+                aiBubble.innerText = fullText || "Typing...";
                 document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
             }
-        
-        // Save to History
-            activeHistory.unshift({ user: text, ai: fullText, time: new Date().toLocaleTimeString() });
-            localStorage.setItem('stealth_history', JSON.stringify(activeHistory));
+
+            // Save to Local History
+            history.unshift({ user: text, ai: fullText, time: new Date().toLocaleTimeString() });
+            localStorage.setItem('stealth_history', JSON.stringify(history.slice(0, 50)));
 
         } catch (e) {
-            aiBubble.innerText = "⚠️ Free tier busy or offline. Try again in a moment.";
+            aiBubble.innerText = "❌ Connection failed. Ensure OPENROUTER_API_KEY is set in Vercel.";
         } finally {
-            document.getElementById('loading').style.display = 'none';
+            loader.style.display = 'none';
         }
     }
 
+    // 4. Image Generation Logic (Pollinations Free)
     function generateImage() {
         const prompt = inputField.value.trim();
-        if (!prompt) return alert("Enter a prompt first!");
-        appendMsg('user', `Draw: ${prompt}`);
+        if (!prompt) return alert("Type an image description first!");
+        
+        appendMsg('user', `🎨 Drawing: ${prompt}`);
         const aiBubble = appendEmptyMsg('ai');
+        aiBubble.innerHTML = "<i>Visualizing...</i>";
+        
         const img = document.createElement('img');
-        img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologo=true`;
+        const seed = Math.floor(Math.random() * 99999);
+        img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&nologo=true`;
         img.className = 'gen-image';
-        aiBubble.innerHTML = "Generating...";
-        img.onload = () => { aiBubble.innerHTML = ""; aiBubble.appendChild(img); };
+        
+        img.onload = () => {
+            aiBubble.innerHTML = "";
+            aiBubble.appendChild(img);
+        };
         inputField.value = "";
     }
 
-    function renderHistory() {
-        const list = document.getElementById('history-list');
-        list.innerHTML = activeHistory.map(item => `
-            <div style="background:#1a1a1a; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #333">
-                <small style="color:var(--accent)">${item.time}</small><br>
-                <b>You:</b> ${item.user.substring(0,30)}...
-            </div>
-        `).join('') || 'No history yet.';
-    }
-
-    function saveSettings() {
-        currentModel = document.getElementById('model-input').value.trim();
-        localStorage.setItem('stealth_model', currentModel);
-        alert("Model Saved!");
-    }
-
+    // 5. UI Helpers
     function appendMsg(sender, text) {
         const win = document.getElementById('chat-window');
         const d = document.createElement('div');
@@ -203,7 +189,36 @@
         return d;
     }
 
-    inputField.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        list.innerHTML = history.length === 0 ? '<p style="opacity:0.4;text-align:center;">No logs.</p>' : 
+            history.map((item, index) => `
+                <div style="background:var(--card); padding:12px; border-radius:10px; margin-bottom:10px; border:1px solid #333; font-size:13px;">
+                    <div style="color:var(--accent); font-size:10px; margin-bottom:4px;">${item.time}</div>
+                    <b>Q:</b> ${item.user.substring(0,40)}${item.user.length > 40 ? '...' : ''}
+                </div>
+            `).join('');
+    }
+
+    function saveSettings() {
+        currentModel = document.getElementById('model-input').value.trim();
+        localStorage.setItem('stealth_model', currentModel);
+        alert("Settings Saved!");
+    }
+
+    function clearHistory() {
+        if(confirm("Wipe all logs?")) {
+            history = [];
+            localStorage.removeItem('stealth_history');
+            renderHistory();
+        }
+    }
+
+    // Auto-expand textarea
+    inputField.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
 </script>
 </body>
 </html>
