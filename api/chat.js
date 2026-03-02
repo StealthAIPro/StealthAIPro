@@ -1,5 +1,8 @@
+export const runtime = 'nodejs'; // Add this line
+
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
+// Your existing POST function logic...
 
 const openrouter = createOpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
