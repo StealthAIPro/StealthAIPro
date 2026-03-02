@@ -3,172 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stealth | v2.0</title>
+    <title>Stealth v3 | Dual Engine</title>
     <style>
         :root { 
-            --bg: #0a0a0a; --panel: #161616; --accent: #A020F0; 
-            --text: #ececec; --status-red: #ff4b4b; --status-green: #00d97e;
+            --bg: #0d0d0d; --panel: #1a1a1a; --accent: #A020F0; 
+            --text: #ffffff; --status-off: #ff4b4b; --status-on: #00d97e;
         }
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
-
-        /* Browser Layout */
-        .container { display: flex; flex-direction: column; height: 100vh; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; overflow: hidden; }
         
-        /* Navigation Bar */
-        .nav-bar { display: flex; align-items: center; padding: 10px 15px; background: var(--panel); gap: 12px; border-bottom: 1px solid #222; z-index: 100; }
+        /* Layout */
+        .browser { display: flex; flex-direction: column; height: 100vh; }
+        .nav { display: flex; align-items: center; padding: 12px 18px; background: var(--panel); gap: 15px; border-bottom: 1px solid #2a2a2a; }
         
-        .controls { display: flex; gap: 8px; }
-        .btn { background: none; border: none; color: var(--text); font-size: 18px; cursor: pointer; padding: 5px; border-radius: 5px; transition: 0.2s; }
-        .btn:hover { background: #222; }
+        /* Search Bar */
+        .search-container { flex: 1; position: relative; }
+        #url-input { 
+            width: 100%; background: #000; border: 1px solid #333; color: #fff; 
+            padding: 10px 20px; border-radius: 20px; outline: none; font-size: 14px; 
+            transition: 0.3s;
+        }
+        #url-input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(160, 32, 240, 0.2); }
 
-        .address-bar { flex: 1; position: relative; display: flex; align-items: center; }
-        #url-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 10px 45px 10px 20px; border-radius: 20px; outline: none; font-size: 14px; transition: border-color 0.3s; }
-        #url-input:focus { border-color: var(--accent); }
-
-        /* Status & Settings */
-        .indicator-group { display: flex; align-items: center; gap: 12px; }
-        .status-pill { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 5px 10px; background: #000; border-radius: 12px; border: 1px solid #222; }
-        #status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-red); box-shadow: 0 0 5px var(--status-red); }
+        /* Controls */
+        .engine-picker { background: #000; color: #fff; border: 1px solid #333; padding: 8px; border-radius: 8px; cursor: pointer; }
+        .status-pill { display: flex; align-items: center; gap: 8px; background: #000; padding: 6px 12px; border-radius: 15px; border: 1px solid #222; font-size: 11px; }
+        #status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--status-off); }
 
         /* Viewport */
-        .viewport { flex: 1; background: #fff; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
-
-        /* Settings Overlay */
-        #settings-modal { display: none; position: fixed; top: 70px; right: 20px; background: var(--panel); border: 1px solid #333; padding: 15px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; width: 220px; }
-        .setting-item { margin-bottom: 10px; }
-        .setting-item label { display: block; font-size: 11px; margin-bottom: 5px; color: #888; text-transform: uppercase; }
-        select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; cursor: pointer; }
-
-        .active-sw { color: var(--accent); font-weight: bold; }
+        .view { flex: 1; background: #fff; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="nav-bar">
-        <div class="controls">
-            <button class="btn" onclick="frame.contentWindow.history.back()">←</button>
-            <button class="btn" onclick="frame.contentWindow.location.reload()">🔄</button>
-        </div>
-        
-        <div class="address-bar">
-            <input type="text" id="url-input" placeholder="Search or enter address...">
-        </div>
-
-        <div class="indicator-group">
-            <div class="status-pill">
-                <div id="status-dot"></div>
-                <span id="status-text">SYNCING</span>
-            </div>
-            <button class="btn" onclick="toggleSettings()">⚙️</button>
-        </div>
-    </div>
-
-    <div class="viewport">
-        <iframe id="proxy-frame"></iframe>
-    </div>
-</div>
-
-<div id="settings-modal">
-    <div class="setting-item">
-        <label>Proxy Engine</label>
-        <select id="engine-select">
-            <option value="uv">Ultraviolet (Default)</option>
-            <option value="scramjet">Scramjet (Fast)</option>
+<div class="browser">
+    <div class="nav">
+        <select id="engine-select" class="engine-picker">
+            <option value="uv">Ultraviolet (SW)</option>
+            <option value="rh">Rammerhead (Fast)</option>
         </select>
+
+        <div class="search-container">
+            <input type="text" id="url-input" placeholder="Enter URL or search Google...">
+        </div>
+
+        <div class="status-pill">
+            <div id="status-dot"></div>
+            <span id="status-msg">OFFLINE</span>
+        </div>
+        <button onclick="location.reload()" style="background:none; border:none; color:white; cursor:pointer;">🔄</button>
     </div>
-    <div class="setting-item" style="margin-top: 15px;">
-        <button class="btn" onclick="forceReinstall()" style="font-size: 12px; width: 100%; background: #222;">Force Reset Engine</button>
+
+    <div class="view">
+        <iframe id="ifr"></iframe>
     </div>
 </div>
 
 <script src="/uv/uv.bundle.js"></script>
 <script src="/uv.config.js"></script>
-<script src="/scramjet.config.js"></script>
 
 <script>
-    const frame = document.getElementById('proxy-frame');
-    const urlInput = document.getElementById('url-input');
-    const statusDot = document.getElementById('status-dot');
-    const statusText = document.getElementById('status-text');
-    const engineSelect = document.getElementById('engine-select');
-    const modal = document.getElementById('settings-modal');
+    const ifr = document.getElementById('ifr');
+    const urlInp = document.getElementById('url-input');
+    const engineSel = document.getElementById('engine-select');
+    const dot = document.getElementById('status-dot');
+    const msg = document.getElementById('status-msg');
 
-    // Load Preference
-    let currentEngine = localStorage.getItem('engine') || 'uv';
-    engineSelect.value = currentEngine;
-
-    function toggleSettings() {
-        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-    }
-
-    async function forceReinstall() {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for(let r of regs) await r.unregister();
-        sessionStorage.clear();
-        location.reload();
-    }
+    // Persistence
+    let engine = localStorage.getItem('engine') || 'uv';
+    engineSel.value = engine;
 
     async function init() {
-        if ('serviceWorker' in navigator) {
-            const swPath = currentEngine === 'uv' ? '/uv.sw.js' : '/sw.js';
-            const scope = currentEngine === 'uv' ? __uv$config.prefix : __scramjet$config.prefix;
+        if (engine === 'rh') {
+            // Rammerhead doesn't need a Service Worker!
+            updateStatus(true, "RAMMERHEAD READY");
+            return;
+        }
 
+        if ('serviceWorker' in navigator) {
             try {
-                const reg = await navigator.serviceWorker.register(swPath, { scope });
-                
-                // Safari specific: ensure the worker is active
-                await navigator.serviceWorker.ready;
+                const reg = await navigator.serviceWorker.register('/uv.sw.js', { 
+                    scope: __uv$config.prefix 
+                });
+
+                // Safari "Kick": Ping the worker to ensure it's active
+                if (reg.active) reg.active.postMessage('ping');
 
                 if (navigator.serviceWorker.controller) {
-                    setReady();
+                    updateStatus(true, "UV READY");
                 } else {
-                    // Force refresh if not controlled (Safari fallback)
-                    if (!sessionStorage.getItem('reloaded')) {
-                        sessionStorage.setItem('reloaded', 'true');
-                        location.reload();
+                    msg.innerText = "SYNCING...";
+                    // Automatic refresh once if Safari is being stubborn
+                    if (!sessionStorage.getItem('init-retry')) {
+                        sessionStorage.setItem('init-retry', 'true');
+                        setTimeout(() => location.reload(), 1000);
                     }
                 }
-            } catch (e) {
-                statusText.innerText = "BLOCKED";
-                console.error(e);
+            } catch (err) {
+                msg.innerText = "SW BLOCKED";
             }
         }
     }
 
-    function setReady() {
-        statusDot.style.background = 'var(--status-green)';
-        statusDot.style.boxShadow = '0 0 8px var(--status-green)';
-        statusText.innerText = currentEngine.toUpperCase() + ' READY';
+    function updateStatus(ready, text) {
+        dot.style.background = ready ? 'var(--status-on)' : 'var(--status-off)';
+        dot.style.boxShadow = ready ? '0 0 8px var(--status-on)' : 'none';
+        msg.innerText = text;
     }
 
-    // Engine Switcher
-    engineSelect.onchange = () => {
-        localStorage.setItem('engine', engineSelect.value);
+    engineSel.onchange = () => {
+        localStorage.setItem('engine', engineSel.value);
         location.reload();
     };
 
-    // Navigation
-    urlInput.onkeydown = (e) => {
+    urlInp.onkeydown = async (e) => {
         if (e.key === 'Enter') {
-            let url = urlInput.value.trim();
-            if (!url.startsWith('http')) {
-                url = (url.includes('.') && !url.includes(' ')) ? 'https://' + url : 'https://www.google.com/search?q=' + encodeURIComponent(url);
+            let url = urlInp.value.trim();
+            if (!url) return;
+
+            // Search engine logic
+            if (!url.includes('.') || url.includes(' ')) {
+                url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+            } else if (!url.startsWith('http')) {
+                url = 'https://' + url;
             }
 
-            const encoded = currentEngine === 'uv' 
-                ? __uv$config.prefix + __uv$config.encodeUrl(url)
-                : __scramjet$config.prefix + __scramjet$config.encodeUrl(url);
-            
-            frame.src = encoded;
-            modal.style.display = 'none';
+            if (engine === 'uv') {
+                ifr.src = __uv$config.prefix + __uv$config.encodeUrl(url);
+            } else {
+                // Rammerhead routing (matches the /rh/ route in your index.js)
+                ifr.src = '/rh/' + url;
+            }
         }
     };
 
-    // Close settings if clicking viewport
-    frame.addEventListener('mouseenter', () => modal.style.display = 'none');
+    // Listen for UV claiming the page
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        updateStatus(true, "UV READY");
+    });
 
     init();
 </script>
