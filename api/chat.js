@@ -20,7 +20,7 @@ export default async function handler(req) {
   const { messages } = await req.json();
 
   const result = await streamText({
-    model: openrouter('google/gemini-2.0-flash-001'), // Specified a model for better stability
+    model: openrouter('openrouter/auto'), // Specified a model for better stability
     messages,
   });
 
