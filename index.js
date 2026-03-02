@@ -1,8 +1,8 @@
 import express from 'express';
 import { createServer } from 'node:http';
 import { uvPath } from '@titaniumnetwork-dev/ultraviolet';
-import { scramjetPath } from '@titaniumnetwork-dev/scramjet';
 import { createBareServer } from '@tomphttp/bare-server-node';
+import Rammerhead from 'rammerhead/src/server/index.js'; // The engine
 import { join } from 'node:path';
 
 const app = express();
@@ -10,33 +10,36 @@ const server = createServer();
 const bare = createBareServer('/bare/');
 const __dirname = process.cwd();
 
-// 1. Serve Proxy Engine Assets
-app.use('/uv/', express.static(uvPath));
-app.use('/scramjet/', express.static(scramjetPath));
+// 1. Initialize Rammerhead
+const rh = new Rammerhead();
 
-// 2. Static Files with Safari Service Worker Fix
-app.use(express.static(__dirname, {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.sw.js') || path.endsWith('sw.js')) {
-            res.setHeader('Service-Worker-Allowed', '/');
-        }
-    }
-}));
+// 2. Serve Ultraviolet
+app.use('/uv/', express.static(uvPath));
+
+// 3. Static Files (p.html, etc.)
+app.use(express.static(__dirname));
+
+// 4. Route Rammerhead Requests
+app.use('/rh/', (req, res) => {
+    rh.handler(req, res);
+});
 
 app.get('/', (req, res) => {
     res.sendFile(join(__dirname, 'p.html'));
 });
 
-// 3. Handle Bare Server Requests
+// 5. Combined Routing (Bare + Rammerhead + Express)
 server.on('request', (req, res) => {
     if (bare.shouldRoute(req)) {
         bare.routeRequest(req, res);
+    } else if (req.url.startsWith('/rh/')) {
+        // Rammerhead handles its own routing here
     } else {
         app(req, res);
     }
 });
 
-// 4. Handle WebSocket Upgrades (Crucial for Scramjet/UV)
+// 6. WebSocket Upgrades (Crucial for both)
 server.on('upgrade', (req, socket, head) => {
     if (bare.shouldRoute(req)) {
         bare.routeUpgrade(req, socket, head);
@@ -45,7 +48,4 @@ server.on('upgrade', (req, socket, head) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Stealth Browser running at http://localhost:${PORT}`);
-});
+server.listen(3000, () => console.log('Multi-Proxy running on port 3000'));
