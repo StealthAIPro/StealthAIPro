@@ -1,20 +1,14 @@
 {
-  "name": "stealth-browser-multi",
+  "name": "stealth-browser",
   "version": "1.0.0",
-  "description": "Multi-engine proxy browser supporting UV and Scramjet",
-  "main": "index.js",
   "type": "module",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js"
-  },
   "dependencies": {
     "@titaniumnetwork-dev/ultraviolet": "^3.2.5",
-    "@titaniumnetwork-dev/scramjet": "^1.1.0",
+    "rammerhead": "github:binary-person/rammerhead",
     "@tomphttp/bare-server-node": "^2.0.1",
     "express": "^4.18.2"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "scripts": {
+    "start": "node index.js"
   }
 }
