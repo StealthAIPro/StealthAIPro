@@ -2,101 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Stealth | Multi-Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stealth | v2.0</title>
     <style>
-        :root { --bg: #050505; --accent: #A020F0; --panel: #111; --text: #eee; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; overflow: hidden; }
-        .browser-ui { display: flex; flex-direction: column; height: 100vh; }
-        .nav-bar { display: flex; padding: 12px; gap: 10px; background: var(--panel); border-bottom: 1px solid #222; align-items: center; }
+        :root { 
+            --bg: #0a0a0a; --panel: #161616; --accent: #A020F0; 
+            --text: #ececec; --status-red: #ff4b4b; --status-green: #00d97e;
+        }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+
+        /* Browser Layout */
+        .container { display: flex; flex-direction: column; height: 100vh; }
         
-        select { background: #000; color: white; border: 1px solid #333; padding: 8px; border-radius: 10px; outline: none; cursor: pointer; }
-        input { flex: 1; background: #000; border: 1px solid #333; color: white; padding: 10px 20px; border-radius: 20px; outline: none; }
+        /* Navigation Bar */
+        .nav-bar { display: flex; align-items: center; padding: 10px 15px; background: var(--panel); gap: 12px; border-bottom: 1px solid #222; z-index: 100; }
         
-        .status-box { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 0 10px; }
-        #status-dot { width: 8px; height: 8px; background: #ff4444; border-radius: 50%; }
-        
-        .view-container { flex: 1; position: relative; background: white; }
-        iframe { position: absolute; width: 100%; height: 100%; border: none; }
+        .controls { display: flex; gap: 8px; }
+        .btn { background: none; border: none; color: var(--text); font-size: 18px; cursor: pointer; padding: 5px; border-radius: 5px; transition: 0.2s; }
+        .btn:hover { background: #222; }
+
+        .address-bar { flex: 1; position: relative; display: flex; align-items: center; }
+        #url-input { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 10px 45px 10px 20px; border-radius: 20px; outline: none; font-size: 14px; transition: border-color 0.3s; }
+        #url-input:focus { border-color: var(--accent); }
+
+        /* Status & Settings */
+        .indicator-group { display: flex; align-items: center; gap: 12px; }
+        .status-pill { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 5px 10px; background: #000; border-radius: 12px; border: 1px solid #222; }
+        #status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-red); box-shadow: 0 0 5px var(--status-red); }
+
+        /* Viewport */
+        .viewport { flex: 1; background: #fff; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        /* Settings Overlay */
+        #settings-modal { display: none; position: fixed; top: 70px; right: 20px; background: var(--panel); border: 1px solid #333; padding: 15px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; width: 220px; }
+        .setting-item { margin-bottom: 10px; }
+        .setting-item label { display: block; font-size: 11px; margin-bottom: 5px; color: #888; text-transform: uppercase; }
+        select { width: 100%; background: #000; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; cursor: pointer; }
+
+        .active-sw { color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="browser-ui">
-        <div class="nav-bar">
-            <select id="engine-select">
-                <option value="uv">Ultraviolet</option>
-                <option value="scramjet">Scramjet</option>
-            </select>
-            <input type="text" id="url-input" placeholder="Search or enter URL...">
-            <div class="status-box">
-                <div id="status-dot"></div>
-                <span id="status-text">Proxy Offline</span>
-            </div>
+
+<div class="container">
+    <div class="nav-bar">
+        <div class="controls">
+            <button class="btn" onclick="frame.contentWindow.history.back()">←</button>
+            <button class="btn" onclick="frame.contentWindow.location.reload()">🔄</button>
         </div>
-        <div class="view-container">
-            <iframe id="proxy-frame"></iframe>
+        
+        <div class="address-bar">
+            <input type="text" id="url-input" placeholder="Search or enter address...">
+        </div>
+
+        <div class="indicator-group">
+            <div class="status-pill">
+                <div id="status-dot"></div>
+                <span id="status-text">SYNCING</span>
+            </div>
+            <button class="btn" onclick="toggleSettings()">⚙️</button>
         </div>
     </div>
 
-    <script src="/uv/uv.bundle.js"></script>
-    <script src="/uv.config.js"></script>
-    <script src="/scramjet.config.js"></script>
+    <div class="viewport">
+        <iframe id="proxy-frame"></iframe>
+    </div>
+</div>
 
-    <script>
-        const engineSelect = document.getElementById('engine-select');
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
-        const urlInput = document.getElementById('url-input');
-        const frame = document.getElementById('proxy-frame');
+<div id="settings-modal">
+    <div class="setting-item">
+        <label>Proxy Engine</label>
+        <select id="engine-select">
+            <option value="uv">Ultraviolet (Default)</option>
+            <option value="scramjet">Scramjet (Fast)</option>
+        </select>
+    </div>
+    <div class="setting-item" style="margin-top: 15px;">
+        <button class="btn" onclick="forceReinstall()" style="font-size: 12px; width: 100%; background: #222;">Force Reset Engine</button>
+    </div>
+</div>
 
-        // Load saved engine
-        const savedEngine = localStorage.getItem('proxy-engine') || 'uv';
-        engineSelect.value = savedEngine;
+<script src="/uv/uv.bundle.js"></script>
+<script src="/uv.config.js"></script>
+<script src="/scramjet.config.js"></script>
 
-        async function initProxy() {
-            const engine = engineSelect.value;
-            if ('serviceWorker' in navigator) {
-                try {
-                    let swFile = engine === 'uv' ? '/uv.sw.js' : '/sw.js';
-                    let scope = engine === 'uv' ? __uv$config.prefix : __scramjet$config.prefix;
+<script>
+    const frame = document.getElementById('proxy-frame');
+    const urlInput = document.getElementById('url-input');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const engineSelect = document.getElementById('engine-select');
+    const modal = document.getElementById('settings-modal');
 
-                    await navigator.serviceWorker.register(swFile, { scope: scope });
-                    
-                    if (navigator.serviceWorker.controller) {
-                        statusDot.style.background = '#00ff88';
-                        statusText.innerText = engine.toUpperCase() + ' Ready';
-                    } else {
-                        statusText.innerText = 'Syncing...';
-                        navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+    // Load Preference
+    let currentEngine = localStorage.getItem('engine') || 'uv';
+    engineSelect.value = currentEngine;
+
+    function toggleSettings() {
+        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function forceReinstall() {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for(let r of regs) await r.unregister();
+        sessionStorage.clear();
+        location.reload();
+    }
+
+    async function init() {
+        if ('serviceWorker' in navigator) {
+            const swPath = currentEngine === 'uv' ? '/uv.sw.js' : '/sw.js';
+            const scope = currentEngine === 'uv' ? __uv$config.prefix : __scramjet$config.prefix;
+
+            try {
+                const reg = await navigator.serviceWorker.register(swPath, { scope });
+                
+                // Safari specific: ensure the worker is active
+                await navigator.serviceWorker.ready;
+
+                if (navigator.serviceWorker.controller) {
+                    setReady();
+                } else {
+                    // Force refresh if not controlled (Safari fallback)
+                    if (!sessionStorage.getItem('reloaded')) {
+                        sessionStorage.setItem('reloaded', 'true');
+                        location.reload();
                     }
-                } catch (err) {
-                    statusText.innerText = 'Proxy Error';
-                    console.error(err);
                 }
+            } catch (e) {
+                statusText.innerText = "BLOCKED";
+                console.error(e);
             }
         }
+    }
 
-        engineSelect.onchange = () => {
-            localStorage.setItem('proxy-engine', engineSelect.value);
-            location.reload();
-        };
+    function setReady() {
+        statusDot.style.background = 'var(--status-green)';
+        statusDot.style.boxShadow = '0 0 8px var(--status-green)';
+        statusText.innerText = currentEngine.toUpperCase() + ' READY';
+    }
 
-        urlInput.onkeydown = (e) => {
-            if (e.key === 'Enter') {
-                let url = urlInput.value.trim();
-                if (!url.startsWith('http')) {
-                    url = (url.includes('.') && !url.includes(' ')) ? 'https://' + url : 'https://www.google.com/search?q=' + encodeURIComponent(url);
-                }
+    // Engine Switcher
+    engineSelect.onchange = () => {
+        localStorage.setItem('engine', engineSelect.value);
+        location.reload();
+    };
 
-                const engine = engineSelect.value;
-                if (engine === 'uv') {
-                    frame.src = __uv$config.prefix + __uv$config.encodeUrl(url);
-                } else {
-                    frame.src = __scramjet$config.prefix + __scramjet$config.encodeUrl(url);
-                }
+    // Navigation
+    urlInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            let url = urlInput.value.trim();
+            if (!url.startsWith('http')) {
+                url = (url.includes('.') && !url.includes(' ')) ? 'https://' + url : 'https://www.google.com/search?q=' + encodeURIComponent(url);
             }
-        };
 
-        initProxy();
-    </script>
+            const encoded = currentEngine === 'uv' 
+                ? __uv$config.prefix + __uv$config.encodeUrl(url)
+                : __scramjet$config.prefix + __scramjet$config.encodeUrl(url);
+            
+            frame.src = encoded;
+            modal.style.display = 'none';
+        }
+    };
+
+    // Close settings if clicking viewport
+    frame.addEventListener('mouseenter', () => modal.style.display = 'none');
+
+    init();
+</script>
+
 </body>
 </html>
