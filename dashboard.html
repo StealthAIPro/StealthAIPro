@@ -56,6 +56,10 @@
         <img src="https://win98icons.alexmeub.com/icons/png/joystick-0.png">
         <span>Games</span>
     </div>
+    <div class="icon" onclick="openWin('settings')">
+        <img src="https://win98icons.alexmeub.com/icons/png/settings_gear-0.png">
+        <span>Settings</span>
+    </div>
 </div>
 
 <div id="win-browser" class="window" style="width: 800px; height: 500px; top: 50px; left: 100px;">
@@ -70,6 +74,28 @@
 <div id="win-ai" class="window" style="width: 350px; height: 500px; top: 80px; left: 50px;">
     <div class="title-bar"><span>AI Assistant</span><div class="title-controls"><button onclick="closeWin('ai')">X</button></div></div>
     <div class="win-content"><iframe src="a-interface.html"></iframe></div>
+</div>
+
+<div id="win-settings" class="window" style="width: 300px; height: 350px; top: 150px; left: 200px;">
+    <div class="title-bar">
+        <span>System Settings</span>
+        <div class="title-controls"><button onclick="closeWin('settings')">X</button></div>
+    </div>
+    <div class="win-content" style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <label>Wallpaper Color:</label>
+        <input type="color" id="set-bg-color" value="#008080">
+        
+        <label>Desktop Name:</label>
+        <input type="text" id="set-os-name" placeholder="StealthOS">
+
+        <label>Clock Format:</label>
+        <select id="set-clock">
+            <option value="12">12-Hour</option>
+            <option value="24">24-Hour</option>
+        </select>
+
+        <button onclick="saveSettings()" style="margin-top: 10px; padding: 5px;">Apply Changes</button>
+    </div>
 </div>
 
 <div id="taskbar">
