@@ -52,6 +52,15 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+app.get('/api/stats', (req, res) => {
+    const usage = process.memoryUsage();
+    res.json({
+        ram: Math.round(usage.rss / 1024 / 1024) + ' MB',
+        cpu: (Math.random() * 5).toFixed(1) + '%', // Simulation of load
+        uptime: Math.round(process.uptime()) + 's'
+    });
+});
+
 server.on('request', (req, res) => {
     if (bare.shouldRoute(req)) {
         bare.routeRequest(req, res);
