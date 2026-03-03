@@ -67,6 +67,31 @@
             container.scrollTop = container.scrollHeight;
             return div;
         }
+
+        async function sendMsg() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    input.value = '';
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        });
+        
+        const data = await response.json();
+        if (data.reply) {
+            addMessage(data.reply, 'ai');
+        } else {
+            addMessage("Error: " + data.error, 'ai');
+        }
+    } catch (e) {
+        addMessage("Server connection failed.", 'ai');
+    }
+}
     </script>
 </body>
 </html>
