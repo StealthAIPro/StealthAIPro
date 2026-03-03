@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "mkdir -p uv && cp node_modules/@titaniumnetwork-dev/ultraviolet/dist/* ./uv/ && mkdir -p scramjet && cp node_modules/@mercuryworkshop/scramjet/dist/* ./scramjet/"
-  },
+  "start": "node index.js",
+  "postinstall": "mkdir -p scramjet uv && cp -r node_modules/@mercuryworkshop/scramjet/dist/* ./scramjet/ && cp -r node_modules/@titaniumnetwork-dev/ultraviolet/dist/* ./uv/"
+  }
   "dependencies": {
     "@titaniumnetwork-dev/ultraviolet": "^3.2.5",
     "@mercuryworkshop/scramjet": "latest",
