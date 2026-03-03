@@ -1,14 +1,15 @@
 {
-  "name": "stealth-browser",
+  "name": "stealth-os",
   "version": "1.0.0",
   "type": "module",
-  "dependencies": {
-    "@titaniumnetwork-dev/ultraviolet": "^3.2.5",
-    "@tomphttp/bare-server-node": "^2.0.1",
-    "express": "^4.18.2"
-  },
   "scripts": {
     "start": "node index.js",
-    "postinstall": "mkdir -p uv && cp node_modules/@titaniumnetwork-dev/ultraviolet/dist/* ./uv/"
+    "postinstall": "mkdir -p uv && cp node_modules/@titaniumnetwork-dev/ultraviolet/dist/* ./uv/ && mkdir -p scramjet && cp node_modules/@mercuryworkshop/scramjet/dist/* ./scramjet/"
+  },
+  "dependencies": {
+    "@titaniumnetwork-dev/ultraviolet": "^3.2.5",
+    "@mercuryworkshop/scramjet": "latest",
+    "@tomphttp/bare-server-node": "^2.0.1",
+    "express": "^4.19.2"
   }
 }
