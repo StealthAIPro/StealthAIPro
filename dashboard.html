@@ -13,117 +13,38 @@
             --border-dark: #808080;
         }
 
-        * { box-sizing: border-box; }
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg-teal); font-family: 'Tahoma', sans-serif; overflow: hidden; }
 
-        /* Desktop Icons */
-        #desktop {
-            height: calc(100vh - 40px);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            gap: 25px;
-        }
+        /* Desktop */
+        #desktop { height: calc(100vh - 40px); padding: 20px; display: flex; flex-direction: column; flex-wrap: wrap; gap: 20px; align-content: flex-start; }
+        .icon { width: 75px; display: flex; flex-direction: column; align-items: center; color: white; text-shadow: 1px 1px black; cursor: pointer; text-align: center; font-size: 12px; }
+        .icon img { width: 42px; height: 42px; margin-bottom: 5px; }
 
-        .icon {
-            width: 75px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: white;
-            text-shadow: 1px 1px black;
-            cursor: pointer;
-            font-size: 12px;
-            text-align: center;
-        }
-
-        .icon img { width: 40px; height: 40px; margin-bottom: 5px; image-rendering: pixelated; }
-        .icon:active { filter: brightness(0.8); }
-
-        /* Window Styling */
-        .window {
-            position: absolute;
-            background: var(--silver);
-            border: 2px solid;
-            border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
-            display: none;
-            flex-direction: column;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
-
-        .title-bar {
-            background: var(--win-blue);
-            color: white;
-            padding: 3px 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .title-controls button {
-            width: 18px; height: 16px;
-            font-size: 10px; font-weight: bold;
-            background: var(--silver);
-            border: 1px solid;
-            border-color: white black black white;
-            cursor: pointer;
-        }
-
-        .win-content { flex: 1; background: white; border: 2px inset var(--border-light); position: relative; }
+        /* Windows */
+        .window { position: absolute; background: var(--silver); border: 2px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); display: none; flex-direction: column; z-index: 10; min-width: 300px; }
+        .title-bar { background: var(--win-blue); color: white; padding: 3px 6px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; cursor: move; }
+        .title-controls button { width: 18px; height: 16px; font-size: 10px; background: var(--silver); border: 1px solid; border-color: white black black white; cursor: pointer; }
+        .win-content { flex: 1; background: white; border: 2px inset white; overflow: hidden; }
         iframe { width: 100%; height: 100%; border: none; }
 
         /* Taskbar */
-        #taskbar {
-            position: fixed; bottom: 0; width: 100%;
-            height: 40px; background: var(--silver);
-            border-top: 2px solid var(--border-light);
-            display: flex; align-items: center; padding: 0 5px; gap: 10px;
-            z-index: 100;
-        }
-
-        #start-btn {
-            height: 30px; padding: 0 10px;
-            font-weight: bold; display: flex; align-items: center; gap: 5px;
-            border: 2px solid; border-color: white black black white;
-            cursor: pointer; background: var(--silver);
-        }
-
+        #taskbar { position: fixed; bottom: 0; width: 100%; height: 40px; background: var(--silver); border-top: 2px solid white; display: flex; align-items: center; padding: 0 5px; z-index: 100; }
+        #start-btn { height: 30px; padding: 0 10px; border: 2px solid; border-color: white black black white; background: var(--silver); font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; }
         #start-btn:active { border-color: black white white black; }
 
-        .task-item {
-            padding: 5px 15px; background: #e0e0e0; border: 1px solid var(--border-dark);
-            font-size: 12px; cursor: default;
-        }
+        /* Status Tray */
+        .tray { margin-left: auto; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-left: 2px solid var(--border-dark); font-size: 12px; }
+        #status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4b4b; border: 1px solid #000; }
 
-        /* Start Menu Overlay */
-        #start-menu {
-            position: absolute; bottom: 40px; left: 0;
-            width: 200px; background: var(--silver);
-            border: 2px solid; border-color: white black black white;
-            display: none; flex-direction: column; z-index: 101;
-        }
-
-        .menu-item { padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .menu-item:hover { background: var(--win-blue); color: white; }
-
-        /* Specific Window Sizes */
-        #win-proxy { width: 800px; height: 500px; top: 50px; left: 150px; }
-        #win-ai { width: 400px; height: 550px; top: 100px; left: 50px; }
-        #win-games { width: 900px; height: 600px; top: 30px; left: 200px; }
-
-        .proxy-nav { padding: 5px; background: var(--silver); display: flex; gap: 5px; }
-        #url-bar { flex: 1; border: 2px inset white; padding: 3px; }
+        /* Proxy Bar */
+        .proxy-nav { padding: 5px; display: flex; gap: 5px; background: var(--silver); }
+        #url-bar { flex: 1; padding: 3px; border: 2px inset white; }
     </style>
 </head>
 <body>
 
 <div id="desktop">
-    <div class="icon" onclick="openWin('proxy')">
+    <div class="icon" onclick="openWin('browser')">
         <img src="https://win98icons.alexmeub.com/icons/png/world-0.png">
         <span>Web Proxy</span>
     </div>
@@ -137,91 +58,66 @@
     </div>
 </div>
 
-<div id="win-proxy" class="window">
-    <div class="title-bar">
-        <span>Internet Explorer</span>
-        <div class="title-controls"><button onclick="closeWin('proxy')">X</button></div>
-    </div>
+<div id="win-browser" class="window" style="width: 800px; height: 500px; top: 50px; left: 100px;">
+    <div class="title-bar"><span>Internet Explorer</span><div class="title-controls"><button onclick="closeWin('browser')">X</button></div></div>
     <div class="proxy-nav">
-        <select id="engine-select">
-            <option value="uv">UV</option>
-            <option value="rh">RH</option>
-        </select>
-        <input type="text" id="url-bar" placeholder="Search or type URL...">
+        <input type="text" id="url-bar" placeholder="Enter URL or search...">
+        <button onclick="go()">Go</button>
     </div>
     <div class="win-content"><iframe id="proxy-frame"></iframe></div>
 </div>
 
-<div id="win-ai" class="window">
-    <div class="title-bar">
-        <span>AI Assistant</span>
-        <div class="title-controls"><button onclick="closeWin('ai')">X</button></div>
-    </div>
-    <div class="win-content">
-        <iframe src="/api/chat-ui"></iframe> </div>
-</div>
-
-<div id="win-games" class="window">
-    <div class="title-bar">
-        <span>Arcade</span>
-        <div class="title-controls"><button onclick="closeWin('games')">X</button></div>
-    </div>
-    <div class="win-content">
-        <iframe id="games-frame"></iframe>
-    </div>
+<div id="win-ai" class="window" style="width: 350px; height: 500px; top: 80px; left: 50px;">
+    <div class="title-bar"><span>AI Assistant</span><div class="title-controls"><button onclick="closeWin('ai')">X</button></div></div>
+    <div class="win-content"><iframe src="ai-interface.html"></iframe></div>
 </div>
 
 <div id="taskbar">
-    <div id="start-btn" onclick="toggleStart()">
-        <img src="https://win98icons.alexmeub.com/icons/png/windows-0.png" width="16">
-        Start
+    <button id="start-btn">Start</button>
+    <div class="tray">
+        <div id="status-dot"></div>
+        <span id="clock">12:00 PM</span>
     </div>
-    <div id="active-tasks" style="display: flex; gap: 5px;"></div>
-</div>
-
-<div id="start-menu">
-    <div class="menu-item" onclick="location.reload()"><span>🔄 Restart OS</span></div>
-    <div class="menu-item" onclick="alert('History Purged')"><span>🗑️ Clear History</span></div>
-    <div class="menu-item" onclick="window.location.href='https://google.com'"><span>🚪 Emergency Exit</span></div>
 </div>
 
 <script src="/uv/uv.bundle.js"></script>
 <script src="/uv.config.js"></script>
-
 <script>
-    function openWin(id) {
-        document.getElementById('win-' + id).style.display = 'flex';
-        toggleStart(false);
-    }
-    function closeWin(id) {
-        document.getElementById('win-' + id).style.display = 'none';
-    }
-    function toggleStart(force) {
-        const menu = document.getElementById('start-menu');
-        menu.style.display = (force === false) ? 'none' : (menu.style.display === 'flex' ? 'none' : 'flex');
-    }
+    function openWin(id) { document.getElementById('win-' + id).style.display = 'flex'; }
+    function closeWin(id) { document.getElementById('win-' + id).style.display = 'none'; }
 
-    // Proxy Engine Logic
     const urlBar = document.getElementById('url-bar');
-    const engineSel = document.getElementById('engine-select');
     const proxyFrame = document.getElementById('proxy-frame');
 
-    urlBar.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-            let url = urlBar.value.trim();
-            if (!url.startsWith('http')) {
-                url = url.includes('.') ? 'https://' + url : 'https://www.google.com/search?q=' + encodeURIComponent(url);
-            }
-            
-            if (engineSel.value === 'uv') {
-                proxyFrame.src = __uv$config.prefix + __uv$config.encodeUrl(url);
-            } else {
-                proxyFrame.src = '/rh/' + url;
-            }
+    function go() {
+        let url = urlBar.value.trim();
+        if (!url.startsWith('http')) {
+            url = url.includes('.') ? 'https://' + url : 'https://www.google.com/search?q=' + encodeURIComponent(url);
         }
-    };
+        proxyFrame.src = __uv$config.prefix + __uv$config.encodeUrl(url);
+    }
 
-    // Auto-register UV for the proxy window
+    urlBar.addEventListener('keypress', (e) => { if (e.key === 'Enter') go(); });
+
+    // Clock & Status
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }, 1000);
+
+    // Bare Status Check
+    fetch('/bare/').then(() => document.getElementById('status-dot').style.background = '#00ff00');
+
+    // Draggable Logic
+    document.querySelectorAll('.window').forEach(win => {
+        const bar = win.querySelector('.title-bar');
+        bar.onmousedown = (e) => {
+            let ox = e.clientX - win.offsetLeft;
+            let oy = e.clientY - win.offsetTop;
+            document.onmousemove = (e) => { win.style.left = (e.clientX-ox)+'px'; win.style.top = (e.clientY-oy)+'px'; };
+            document.onmouseup = () => { document.onmousemove = null; };
+        };
+    });
+
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/uv.sw.js', { scope: __uv$config.prefix });
     }
