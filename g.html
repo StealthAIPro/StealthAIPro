@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { background: #fff; font-family: 'Tahoma', sans-serif; margin: 0; padding: 20px; }
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 20px; }
+        .game-card { display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center; }
+        .game-card:hover img { filter: brightness(1.2); }
+        .game-card img { width: 48px; height: 48px; margin-bottom: 5px; border: 1px solid #808080; padding: 5px; background: #eee; }
+        .game-card span { font-size: 12px; color: #000; }
+        h2 { font-size: 16px; border-bottom: 2px solid #000080; padding-bottom: 5px; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h2>Select a Game Engine</h2>
+    <div class="game-grid">
+        <div class="game-card" onclick="launchGame('https://selenite.cc/')">
+            <img src="https://win98icons.alexmeub.com/icons/png/game_solitaire_ads-0.png">
+            <span>Selenite Games</span>
+        </div>
+        
+        <div class="game-card" onclick="launchGame('https://tbg95.github.io/')">
+            <img src="https://win98icons.alexmeub.com/icons/png/joystick-0.png">
+            <span>TBG95</span>
+        </div>
+    </div>
+
+    <script>
+        function launchGame(url) {
+            // Access the proxy logic from the main dashboard
+            const uv = window.parent.__uv$config;
+            if (uv) {
+                const proxiedUrl = uv.prefix + uv.encodeUrl(url);
+                // Tell the main dashboard's browser frame to load this
+                window.parent.document.getElementById('proxy-frame').src = proxiedUrl;
+                window.parent.openWin('browser');
+            } else {
+                alert("Proxy engine not loaded yet. Open the browser once first!");
+            }
+        }
+    </script>
+</body>
+</html>
