@@ -109,6 +109,37 @@
 <script src="/uv/uv.bundle.js"></script>
 <script src="/uv.config.js"></script>
 <script>
+    // Load Settings on Start
+window.addEventListener('load', () => {
+    const config = JSON.parse(localStorage.getItem('stealth_settings')) || {};
+    
+    if (config.bg) document.body.style.background = config.bg;
+    if (config.name) document.getElementById('start-btn').innerText = config.name;
+    
+    // Fill the inputs with current values
+    document.getElementById('set-bg-color').value = config.bg || '#008080';
+    document.getElementById('set-os-name').value = config.name || 'Start';
+});
+
+function saveSettings() {
+    const newBg = document.getElementById('set-bg-color').value;
+    const newName = document.getElementById('set-os-name').value;
+    const clockPref = document.getElementById('set-clock').value;
+
+    const settings = {
+        bg: newBg,
+        name: newName,
+        clock: clockPref
+    };
+
+    localStorage.setItem('stealth_settings', JSON.stringify(settings));
+    
+    // Apply immediately
+    document.body.style.background = newBg;
+    document.getElementById('start-btn').innerText = newName;
+    
+    alert("Settings Saved!");
+}
     function openWin(id) { document.getElementById('win-' + id).style.display = 'flex'; }
     function closeWin(id) { document.getElementById('win-' + id).style.display = 'none'; }
 
