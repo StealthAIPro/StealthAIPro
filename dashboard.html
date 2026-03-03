@@ -3,157 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Stealth OS</title>
+    <title>StealthOS</title>
     <style>
-        :root { --accent: #A020F0; --bg: #050505; --panel: #111; --text: #eee; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; }
-
-        /* Dashboard Grid Layout */
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 40px;
-            max-width: 1100px;
-            margin: 0 auto;
-            height: 100vh;
-            align-content: center;
-            transition: filter 0.3s ease;
+        :root {
+            --bg-teal: #008080;
+            --silver: #c0c0c0;
+            --win-blue: #000080;
+            --border-light: #ffffff;
+            --border-dark: #808080;
         }
 
-        .card {
-            background: var(--panel);
-            border: 1px solid #222;
-            border-radius: 16px;
-            padding: 25px;
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg-teal); font-family: 'Tahoma', sans-serif; overflow: hidden; }
+
+        /* Desktop Icons */
+        #desktop {
+            height: calc(100vh - 40px);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 25px;
+        }
+
+        .icon {
+            width: 75px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            text-shadow: 1px 1px black;
             cursor: pointer;
-            transition: 0.3s;
+            font-size: 12px;
             text-align: center;
         }
 
-        .card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .card .icon { font-size: 2.5rem; margin-bottom: 10px; }
-        .card h2 { margin: 0; font-size: 1.2rem; }
+        .icon img { width: 40px; height: 40px; margin-bottom: 5px; image-rendering: pixelated; }
+        .icon:active { filter: brightness(0.8); }
 
-        /* Full-Screen App Layer */
-        .app-layer {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg);
-            z-index: 50;
+        /* Window Styling */
+        .window {
+            position: absolute;
+            background: var(--silver);
+            border: 2px solid;
+            border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
             display: none;
+            flex-direction: column;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+            z-index: 10;
         }
-        .app-layer.active { display: block; }
+
+        .title-bar {
+            background: var(--win-blue);
+            color: white;
+            padding: 3px 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .title-controls button {
+            width: 18px; height: 16px;
+            font-size: 10px; font-weight: bold;
+            background: var(--silver);
+            border: 1px solid;
+            border-color: white black black white;
+            cursor: pointer;
+        }
+
+        .win-content { flex: 1; background: white; border: 2px inset var(--border-light); position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* Floating Menu (Bottom Left) */
-        .menu-container { position: fixed; bottom: 30px; left: 30px; z-index: 100; }
-        
-        .main-fab {
-            width: 60px; height: 60px; background: var(--accent);
-            border-radius: 50%; border: none; color: white;
-            font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 15px rgba(160,32,240,0.4);
-            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        /* Taskbar */
+        #taskbar {
+            position: fixed; bottom: 0; width: 100%;
+            height: 40px; background: var(--silver);
+            border-top: 2px solid var(--border-light);
+            display: flex; align-items: center; padding: 0 5px; gap: 10px;
+            z-index: 100;
         }
-        .main-fab.open { transform: rotate(45deg); background: #333; }
 
-        .fab-options {
-            position: absolute; bottom: 75px; left: 0;
-            display: flex; flex-direction: column; gap: 12px;
-            opacity: 0; transform: translateY(20px); pointer-events: none;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        #start-btn {
+            height: 30px; padding: 0 10px;
+            font-weight: bold; display: flex; align-items: center; gap: 5px;
+            border: 2px solid; border-color: white black black white;
+            cursor: pointer; background: var(--silver);
         }
-        .fab-options.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-        .opt-btn {
-            width: 50px; height: 50px; background: var(--panel); border: 1px solid #333;
-            border-radius: 50%; color: white; cursor: pointer; font-size: 1.2rem;
-            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        #start-btn:active { border-color: black white white black; }
+
+        .task-item {
+            padding: 5px 15px; background: #e0e0e0; border: 1px solid var(--border-dark);
+            font-size: 12px; cursor: default;
         }
-        .opt-btn:hover { background: var(--accent); transform: translateX(5px); }
+
+        /* Start Menu Overlay */
+        #start-menu {
+            position: absolute; bottom: 40px; left: 0;
+            width: 200px; background: var(--silver);
+            border: 2px solid; border-color: white black black white;
+            display: none; flex-direction: column; z-index: 101;
+        }
+
+        .menu-item { padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .menu-item:hover { background: var(--win-blue); color: white; }
+
+        /* Specific Window Sizes */
+        #win-proxy { width: 800px; height: 500px; top: 50px; left: 150px; }
+        #win-ai { width: 400px; height: 550px; top: 100px; left: 50px; }
+        #win-games { width: 900px; height: 600px; top: 30px; left: 200px; }
+
+        .proxy-nav { padding: 5px; background: var(--silver); display: flex; gap: 5px; }
+        #url-bar { flex: 1; border: 2px inset white; padding: 3px; }
     </style>
 </head>
 <body>
 
-<div class="dashboard-container" id="main-grid">
-    <div class="card" onclick="openApp('ai')">
-        <div class="icon">🤖</div>
-        <h2>Neural AI</h2>
+<div id="desktop">
+    <div class="icon" onclick="openWin('proxy')">
+        <img src="https://win98icons.alexmeub.com/icons/png/world-0.png">
+        <span>Web Proxy</span>
     </div>
-    <div class="card" onclick="openApp('proxy')">
-        <div class="icon">🌐</div>
-        <h2>Web Proxy</h2>
+    <div class="icon" onclick="openWin('ai')">
+        <img src="https://win98icons.alexmeub.com/icons/png/msagent-0.png">
+        <span>Stealth AI</span>
     </div>
-    <div class="card" onclick="openApp('music')">
-        <div class="icon">🎵</div>
-        <h2>Audio Hub</h2>
-    </div>
-    <div class="card" onclick="openApp('settings')">
-        <div class="icon">⚙️</div>
-        <h2>Settings</h2>
+    <div class="icon" onclick="openWin('games')">
+        <img src="https://win98icons.alexmeub.com/icons/png/joystick-0.png">
+        <span>Games</span>
     </div>
 </div>
 
-<div class="menu-container">
-    <div class="fab-options" id="fab-menu">
-        <button class="opt-btn" title="Settings" onclick="openApp('settings')">⚙️</button>
-        <button class="opt-btn" title="Proxy" onclick="openApp('proxy')">🌐</button>
-        <button class="opt-btn" title="Music" onclick="openApp('music')">🎵</button>
-        <button class="opt-btn" title="AI Chat" onclick="openApp('ai')">🤖</button>
-        <button class="opt-btn" title="Dashboard" onclick="closeApp()">🏠</button>
+<div id="win-proxy" class="window">
+    <div class="title-bar">
+        <span>Internet Explorer</span>
+        <div class="title-controls"><button onclick="closeWin('proxy')">X</button></div>
     </div>
-    <button class="main-fab" id="main-btn" onclick="toggleMenu()">🏠</button>
+    <div class="proxy-nav">
+        <select id="engine-select">
+            <option value="uv">UV</option>
+            <option value="rh">RH</option>
+        </select>
+        <input type="text" id="url-bar" placeholder="Search or type URL...">
+    </div>
+    <div class="win-content"><iframe id="proxy-frame"></iframe></div>
 </div>
 
-<div class="app-layer" id="app-layer">
-    <iframe id="app-frame" src=""></iframe>
+<div id="win-ai" class="window">
+    <div class="title-bar">
+        <span>AI Assistant</span>
+        <div class="title-controls"><button onclick="closeWin('ai')">X</button></div>
+    </div>
+    <div class="win-content">
+        <iframe src="/api/chat-ui"></iframe> </div>
 </div>
+
+<div id="win-games" class="window">
+    <div class="title-bar">
+        <span>Arcade</span>
+        <div class="title-controls"><button onclick="closeWin('games')">X</button></div>
+    </div>
+    <div class="win-content">
+        <iframe id="games-frame"></iframe>
+    </div>
+</div>
+
+<div id="taskbar">
+    <div id="start-btn" onclick="toggleStart()">
+        <img src="https://win98icons.alexmeub.com/icons/png/windows-0.png" width="16">
+        Start
+    </div>
+    <div id="active-tasks" style="display: flex; gap: 5px;"></div>
+</div>
+
+<div id="start-menu">
+    <div class="menu-item" onclick="location.reload()"><span>🔄 Restart OS</span></div>
+    <div class="menu-item" onclick="alert('History Purged')"><span>🗑️ Clear History</span></div>
+    <div class="menu-item" onclick="window.location.href='https://google.com'"><span>🚪 Emergency Exit</span></div>
+</div>
+
+<script src="/uv/uv.bundle.js"></script>
+<script src="/uv.config.js"></script>
 
 <script>
-    const menu = document.getElementById('fab-menu');
-    const btn = document.getElementById('main-btn');
-    const layer = document.getElementById('app-layer');
-    const frame = document.getElementById('app-frame');
-    const grid = document.getElementById('main-grid');
-
-    function toggleMenu() {
-        menu.classList.toggle('show');
-        btn.classList.toggle('open');
-        btn.innerText = btn.classList.contains('open') ? '✕' : '🏠';
+    function openWin(id) {
+        document.getElementById('win-' + id).style.display = 'flex';
+        toggleStart(false);
+    }
+    function closeWin(id) {
+        document.getElementById('win-' + id).style.display = 'none';
+    }
+    function toggleStart(force) {
+        const menu = document.getElementById('start-menu');
+        menu.style.display = (force === false) ? 'none' : (menu.style.display === 'flex' ? 'none' : 'flex');
     }
 
-    function openApp(id) {
-        const urls = {
-            'ai': 'a',
-            'music': 'm',
-            'settings': 's',
-            'proxy': 'p' // Replace with your Render URL
-        };
+    // Proxy Engine Logic
+    const urlBar = document.getElementById('url-bar');
+    const engineSel = document.getElementById('engine-select');
+    const proxyFrame = document.getElementById('proxy-frame');
 
-        if (urls[id]) {
-            frame.src = urls[id];
-            layer.classList.add('active');
-            grid.style.filter = "blur(10px)"; // Cool stealth effect
-            if(menu.classList.contains('show')) toggleMenu();
+    urlBar.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            let url = urlBar.value.trim();
+            if (!url.startsWith('http')) {
+                url = url.includes('.') ? 'https://' + url : 'https://www.google.com/search?q=' + encodeURIComponent(url);
+            }
+            
+            if (engineSel.value === 'uv') {
+                proxyFrame.src = __uv$config.prefix + __uv$config.encodeUrl(url);
+            } else {
+                proxyFrame.src = '/rh/' + url;
+            }
         }
-    }
+    };
 
-    function closeApp() {
-        layer.classList.remove('active');
-        frame.src = "";
-        grid.style.filter = "none";
-        if(menu.classList.contains('show')) toggleMenu();
-    }
-
-    // Close menu on outside click
-    window.onclick = (e) => {
-        if (!e.target.closest('.menu-container')) {
-            menu.classList.remove('show');
-            btn.classList.remove('open');
-            btn.innerText = '🏠';
-        }
+    // Auto-register UV for the proxy window
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/uv.sw.js', { scope: __uv$config.prefix });
     }
 </script>
-
 </body>
 </html>
