@@ -1,9 +1,9 @@
-importScripts('/scramjet/scramjet.codecs.js');
-importScripts('/scramjet/scramjet.config.js');
-importScripts('/scramjet/scramjet.worker.js');
+importScripts("/scramjet/scramjet.all.js");
 
-const sw = new ScramjetServiceWorker();
+const scramjet = new $scramjet.ScramjetServiceWorker();
 
-self.addEventListener('fetch', (event) => {
-    event.respondWith(sw.fetch(event));
+self.addEventListener("fetch", (event) => {
+    if (event.request.url.startsWith(location.origin + "/scramjet/")) {
+        event.respondWith(scramjet.fetch(event));
+    }
 });
