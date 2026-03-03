@@ -8,6 +8,7 @@
     "express": "^4.18.2"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "mkdir -p uv && cp node_modules/@titaniumnetwork-dev/ultraviolet/dist/* ./uv/"
   }
 }
