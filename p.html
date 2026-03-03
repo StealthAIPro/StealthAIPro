@@ -79,6 +79,35 @@
                 }
             }
         });
+
+        // Inside your <script> tag in p.html
+const { ScramjetController } = $scramjetLoadController();
+
+// Define where your Scramjet files live
+const scramjet = new ScramjetController({
+    files: {
+        wasm: "/scramjet/scramjet.wasm.wasm",
+        all: "/scramjet/scramjet.all.js",
+    }
+});
+
+async function initEngines() {
+    try {
+        // Register UV
+        await navigator.serviceWorker.register('/uv.sw.js', { scope: __uv$config.prefix });
+        
+        // Register Scramjet (Scramjet usually sits at root /)
+        await navigator.serviceWorker.register('/sw.js');
+        
+        // Initialize the Scramjet controller
+        await scramjet.init();
+        
+        statusText.innerText = "READY";
+    } catch (err) {
+        statusText.innerText = "SW ERROR: " + err.message;
+        console.error(err);
+    }
+}
     </script>
 </body>
 </html>
