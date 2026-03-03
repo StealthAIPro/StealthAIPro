@@ -22,6 +22,36 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
+app.use(express.json()); // This allows the server to read the message you sent
+
+app.post('/api/chat', async (req, res) => {
+    const { message } = req.body;
+
+    try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "model": "openrouter/auto", // Or your preferred model
+                "messages": [
+                    { "role": "user", "content": message }
+                ]
+            })
+        });
+
+        const data = await response.json();
+        const aiReply = data.choices[0].message.content;
+        res.json({ reply: aiReply });
+
+    } catch (error) {
+        console.error("AI Error:", error);
+        res.status(500).json({ error: "The AI is sleepy. Check your API key!" });
+    }
+});
+
 server.on('request', (req, res) => {
     if (bare.shouldRoute(req)) {
         bare.routeRequest(req, res);
