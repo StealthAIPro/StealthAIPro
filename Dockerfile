@@ -19,7 +19,10 @@ COPY . .
 
 # Run the postinstall manually if it didn't trigger, 
 # ensuring /uv and /scramjet folders exist
+# ... after COPY . .
+RUN npm install
 RUN npm run postinstall
+# ... before EXPOSE 8000
 
 EXPOSE 8000
 
