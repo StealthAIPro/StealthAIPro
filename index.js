@@ -4,6 +4,26 @@ import { uvPath } from '@titaniumnetwork-dev/ultraviolet';
 import { createBareServer } from '@tomphttp/bare-server-node';
 import Rammerhead from 'rammerhead/src/server/index.js'; // Ensure this is installed
 import { join } from 'node:path';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Fix for Rammerhead's missing cache folders on Render
+const cacheFolders = [
+    path.join(process.cwd(), 'node_modules/rammerhead/cache-js'),
+    path.join(process.cwd(), 'node_modules/rammerhead/cache-asm')
+];
+
+cacheFolders.forEach(folder => {
+    if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, { recursive: true });
+        console.log(`Created missing folder: ${folder}`);
+    }
+});
+
+// Create a dummy .env if it doesn't exist to stop dotenv-flow from complaining
+if (!fs.existsSync('.env')) {
+    fs.writeFileSync('.env', 'PORT=3000');
+}
 
 const app = express();
 const server = createServer();
