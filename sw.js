@@ -1,27 +1,34 @@
+// 1. Import the engine
+importScripts("/scramjet/scramjet.all.js");
+
+// 2. Initialize the variable IMMEDIATELY (using 'var' to avoid TDZ issues in SW)
+var scramjet;
+
 try {
-    // 1. Import the core Scramjet bundle
-    // Make sure this file actually exists at your-site.com/scramjet/scramjet.all.js
-    importScripts("/scramjet/scramjet.all.js");
-
-    // 2. Safely initialize the worker
-    if (typeof $scramjetLoadWorker === 'function') {
-        const { ScramjetServiceWorker } = $scramjetLoadWorker();
-        const scramjet = new ScramjetServiceWorker();
-
-        self.addEventListener("fetch", (event) => {
-            event.respondWith(
-                (async () => {
-                    await scramjet.loadConfig();
-                    if (scramjet.route(event)) {
-                        return scramjet.fetch(event);
-                    }
-                    return fetch(event.request);
-                })()
-            );
-        });
-    } else {
-        console.error("Scramjet script loaded but $scramjetLoadWorker is missing!");
-    }
+    const { ScramjetServiceWorker } = $scramjetLoadWorker();
+    scramjet = new ScramjetServiceWorker();
 } catch (e) {
-    console.error("Service Worker evaluation failed:", e);
+    console.error("Scramjet Worker failed to initialize:", e);
 }
+
+self.addEventListener("fetch", (event) => {
+    // 3. Safety Check: If initialization failed, don't try to route
+    if (!scramjet) return;
+
+    event.respondWith(
+        (async () => {
+            try {
+                await scramjet.loadConfig();
+                
+                if (scramjet.route(event)) {
+                    return await scramjet.fetch(event);
+                }
+            } catch (err) {
+                console.error("Scramjet Fetch Error:", err);
+            }
+
+            // Fallback to normal fetch if not a proxy request
+            return fetch(event.request);
+        })()
+    );
+});
